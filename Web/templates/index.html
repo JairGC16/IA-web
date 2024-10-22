@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IA MUSiC</title>
+    <!-- Incluir Bootstrap -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+    <!-- Incluir jQuery para AJAX -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+</head>
+<body style="background-color: #f7e8f6;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 text-center">
+                <h1 class="my-4" style="color: #d881f8;">IA  MUSiC</h1>
+                <input type="text" id="song-search" class="form-control" placeholder="Search for a song..." autofocus>
+            </div>
+        </div>
+
+        <div class="row my-4" id="results">
+            <!-- Aquí aparecerán las tarjetas con los resultados -->
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $('#song-search').on('input', function() {
+                var query = $(this).val();
+                if (query.length > 0) {
+                    $.ajax({
+                        url: '/search',
+                        method: 'POST',
+                        data: { query: query },
+                        success: function(tracks) {
+                            $('#results').empty();
+                            if (tracks.length > 0) {
+                                tracks.forEach(function(track) {
+                                    var card = `
+                                    <div class="col-md-4">
+                                        <div class="card mb-4 shadow-sm" style="border-radius: 15px;">
+                                            <img src="${track.image}" class="card-img-top" alt="Album Art">
+                                            <div class="card-body" style="background-color: #ffeef9;">
+                                                <h5 class="card-title" style="color: #b85fc6;">${track.name}</h5>
+                                                <p class="card-text">${track.artist}</p>
+                                                <p class="card-text"><small class="text-muted">${track.album}</small></p>
+                                                ${track.preview_url ? `
+                                                    <button class="btn btn-primary" style="background-color: #d881f8;" onclick="playPreview('${track.preview_url}', this)">Play</button>
+                                                    <audio controls class="audio-player mt-2" style="display: none; width: 100%;">
+                                                        <source src="${track.preview_url}" type="audio/mpeg">
+                                                        Your browser does not support the audio tag.
+                                                    </audio>
+                                                ` : '<p class="text-muted">No preview available</p>'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    `;
+                                    $('#results').append(card);
+                                });
+                            } else {
+                                $('#results').html('<p class="text-center">No songs found.</p>');
+                            }
+                        }
+                    });
+                } else {
+                    $('#results').empty();
+                }
+            });
+        });
+
+        function playPreview(previewUrl, button) {
+            var audioPlayer = $(button).siblings('audio')[0];
+            if (audioPlayer.style.display === 'none') {
+                // Mostrar el reproductor de audio y reproducir la canción
+                audioPlayer.style.display = 'block';
+                audioPlayer.play();
+                // Cambiar el texto del botón
+                $(button).text('Pausar');
+            } else {
+                // Pausar la canción y ocultar el reproductor
+                audioPlayer.pause();
+                audioPlayer.style.display = 'none';
+                $(button).text('Play');
+            }
+        }
+    </script>
+</body>
+</html>
